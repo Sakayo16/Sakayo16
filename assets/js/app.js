@@ -1,5 +1,5 @@
 // ===============================
-// app.js — Liste "magazine" simple
+// app.js — Liste "magazine" simple + partage
 // ===============================
 
 // Utilitaires dates
@@ -70,12 +70,12 @@ async function loadData() {
 
   // Normalisation minimale
   ALL_DATA = (ALL_DATA || [])
-    .filter(row => row.title && row.apply_url && row.deadline)
+    .filter(row => row.title && row.apply_url && (row.deadline || row.deadline === "")) // certaines offres n'ont pas de deadline
     .map(row => ({
       ...row,
-      id: row.id || slugify(`${row.title}-${row.deadline}`),
-      deadlineDate: toDate(row.deadline),
-      createdDate: toDate(row.created_at || row.posted_at || row.updated_at || row.deadline)
+      id: row.id || slugify(`${row.title}-${row.deadline || 'no-deadline'}`),
+      deadlineDate: toDate(row.deadline || null),
+      createdDate: toDate(row.created_at || row.posted_at || row.updated_at || row.deadline || null)
     }));
 }
 
@@ -109,9 +109,9 @@ function render() {
   // Tri
   const sort = sortSelect?.value || 'created_desc';
   data.sort((a, b) => {
-    if (sort === 'deadline_asc') return a.deadlineDate - b.deadlineDate;
-    if (sort === 'created_desc') return (b.createdDate - a.createdDate);
-    if (sort === 'created_asc')  return (a.createdDate - b.createdDate);
+    if (sort === 'deadline_asc') return (a.deadlineDate || Infinity) - (b.deadlineDate || Infinity);
+    if (sort === 'created_desc') return (b.createdDate || 0) - (a.createdDate || 0);
+    if (sort === 'created_asc')  return (a.createdDate || 0) - (b.createdDate || 0);
     if (sort === 'title_asc')    return a.title.localeCompare(b.title, 'fr');
     return 0;
   });
@@ -158,7 +158,10 @@ function renderList(items) {
         <div class="col-md-7 col-9 list-body">
           <div class="list-title mb-1">${escapeHtml(it.title)}</div>
           <div class="small list-meta mb-2"><i class="bi bi-geo-alt-fill me-1"></i><em>${escapeHtml(it.country || '')}</em> · ${escapeHtml(it.organization || '')}</div>
-          <div class="small text-muted">Date limite : <strong>${formatDate(it.deadlineDate)}</strong> ${badges.join('')}</div>
+          <div class="small text-muted">
+            ${it.deadlineDate ? `Date limite : <strong>${formatDate(it.deadlineDate)}</strong>` : `<em>Sans date limite</em>`}
+            ${badges.join('')}
+          </div>
         </div>
         <div class="col-md-3 d-flex align-items-center justify-content-md-end mt-2 mt-md-0">
           <div class="text-end w-100 w-md-auto">
@@ -184,13 +187,51 @@ function openDetails(it) {
     <div class="mb-2"><strong>Type :</strong> ${escapeHtml(it.type || '')}</div>
     <div class="mb-2"><strong>Organisation :</strong> ${escapeHtml(it.organization || '')}</div>
     <div class="mb-2"><strong>Pays / Région :</strong> ${escapeHtml(it.country || '')}</div>
-    <div class="mb-2"><strong>Date limite :</strong> ${formatDate(it.deadlineDate)}</div>
+    <div class="mb-2"><strong>Date limite :</strong> ${it.deadlineDate ? formatDate(it.deadlineDate) : '—'}</div>
     ${it.funding_amount ? `<div class="mb-2"><strong>Montant / Bourse :</strong> ${escapeHtml(it.funding_amount)}</div>` : ''}
     <div class="mb-3"><strong>Description :</strong><br>${escapeHtml(it.description_long || it.description_short || '')}</div>
-    ${Array.isArray(it.tags) ? `<div class="mb-2"><strong>Tags :</strong> ${it.tags.map(escapeHtml).join(', ')}</div>` : ''}
+    ${Array.isArray(it.tags) && it.tags.length ? `<div class="mb-2"><strong>Tags :</strong> ${it.tags.map(escapeHtml).join(', ')}</div>` : ''}
   `;
+
+  // Lien Candidater
   const link = document.getElementById('applyLink');
-  link.href = it.apply_url;
+  if (link) link.href = it.apply_url;
+
+  // Partage natif (Web Share API)
+  const shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) {
+    shareBtn.onclick = () => {
+      const shareData = {
+        title: it.title,
+        text: `Découvrez cette opportunité : ${it.title}${it.description_short ? '\n\n' + it.description_short : ''}`,
+        url: it.apply_url
+      };
+      if (navigator.share) {
+        navigator.share(shareData).catch(console.error);
+      } else {
+        navigator.clipboard.writeText(it.apply_url).then(() => {
+          alert("Lien copié dans le presse-papiers !");
+        }).catch(console.error);
+      }
+    };
+  }
+
+  // Liens sociaux
+  const ln = document.getElementById('shareLinkedin');
+  const wa = document.getElementById('shareWhatsapp');
+  const tw = document.getElementById('shareTwitter');
+  const em = document.getElementById('shareEmail');
+
+  const url = it.apply_url || location.href;
+  const title = it.title || 'Opportunité';
+  const txt = it.description_short || '';
+
+  if (ln) ln.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  if (wa) wa.href = `https://wa.me/?text=${encodeURIComponent(`Découvrez cette opportunité : ${title} ${url}`)}`;
+  if (tw) tw.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+  if (em) em.href = `mailto:?subject=${encodeURIComponent("Opportunité : " + title)}&body=${encodeURIComponent((txt ? txt + "\n\n" : "") + "Candidater ici : " + url)}`;
+
+  // Afficher la modale
   new bootstrap.Modal(document.getElementById('detailsModal')).show();
 }
 
@@ -203,7 +244,7 @@ function slugify(s='') {
     .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 }
 function escapeHtml(s='') {
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 function pad(n){ return String(n).padStart(2,'0'); }
 function formatDate(d){ if(!d) return ''; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
