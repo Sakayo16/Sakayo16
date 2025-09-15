@@ -1,4 +1,20 @@
 // Utilitaires dates
+<p class="card-text flex-grow-1">${escapeHtml(it.description_short || '')}</p>
+<div class="d-flex align-items-center justify-content-between mt-2">
+<div class="small"><i class="bi bi-calendar2-week me-1"></i> Date limite : <strong>${formatDate(it.deadlineDate)}</strong></div>
+<div>${badges.join('')}</div>
+</div>
+<div class="mt-3 d-flex gap-2">
+<button class="btn btn-outline-secondary btn-sm rounded-pill" data-id="${it.id}" data-action="details"><i class="bi bi-eye me-1"></i> Détails</button>
+<a class="btn btn-primary btn-sm rounded-pill" href="${it.apply_url}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i> Candidater</a>
+</div>
+</div>
+</div>`;
+
+
+card.querySelector('[data-action="details"]').addEventListener('click', () => openDetails(it));
+grid.appendChild(card);
+}
 }
 
 
@@ -21,9 +37,7 @@ modal.show();
 
 
 // Outils
-function debounce(fn, wait=300) {
-let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
-}
+function debounce(fn, wait=300) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; }
 function slugify(s='') { return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 function escapeHtml(s='') { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[m])); }
 function pad(n){ return String(n).padStart(2,'0'); }
