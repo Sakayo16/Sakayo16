@@ -1,14 +1,34 @@
-:root { --accent: #0d6efd; }
+:root { --accent: #0d6efd; --soft: #f5f7fb; }
 
 
-.ad { min-height: 60px; }
+body.bg-soft { background: var(--soft); }
 
 
+/* Logo rond */
+.brand-logo { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; }
+
+
+/* Hero gradient */
+.bg-gradient-primary { background: linear-gradient(135deg, #0d6efd 0%, #6ea8fe 100%); }
+.hero-section .hero-shape { position: absolute; right: -80px; top: -80px; width: 300px; height: 300px; background: radial-gradient(ellipse at center, rgba(255,255,255,0.25), rgba(255,255,255,0)); border-radius: 50%; filter: blur(6px); opacity: .8; }
+
+
+/* Cards */
+.card-opportunity { border: 0; box-shadow: 0 6px 24px rgba(0,0,0,0.06); border-radius: 1rem; }
 .card-opportunity .badge { font-weight: 600; }
 
 
-.cookie-banner { position: fixed; inset: auto 0 0 0; background: #f8f9fa; border-top: 1px solid #dee2e6; z-index: 1030; }
+/* Ads placeholders */
+.ad { min-height: 60px; }
 
 
-/* Accessibilité */
-:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
+/* Cookie banner */
+.cookie-banner { z-index: 1090; }
+
+
+/* Pagination pills */
+.pagination-pill .page-link { border-radius: 999px; }
+
+
+/* Accessibility */
+:focus-visible { outline: 2px dashed var(--accent); outline-offset: 3px; }
