@@ -28,6 +28,27 @@
 </div>
 </nav>
 
+<!-- CONTENEUR D’AFFICHAGE -->
+<div id="listFeed" class="vstack gap-3"></div>
+
+<!-- MODALE DÉTAILS (à la fin du body si tu préfères) -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="modalTitle">Détails</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body"><div id="modalContent"></div></div>
+      <div class="modal-footer border-0">
+        <a id="applyLink" class="btn btn-primary rounded-pill" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right me-1"></i> Candidater
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Hero fin -->
 <header class="py-4 bg-gradient-primary text-white">
