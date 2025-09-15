@@ -1,0 +1,14 @@
+:root { --accent: #0d6efd; }
+
+
+.ad { min-height: 60px; }
+
+
+.card-opportunity .badge { font-weight: 600; }
+
+
+.cookie-banner { position: fixed; inset: auto 0 0 0; background: #f8f9fa; border-top: 1px solid #dee2e6; z-index: 1030; }
+
+
+/* Accessibilité */
+:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
