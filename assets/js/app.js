@@ -1,5 +1,5 @@
 // ===============================
-// app.js — Liste "magazine" simple + partage robuste
+// app.js — Liste "magazine" + partage vers plateforme (deep link ?id=...)
 // ===============================
 
 // Utilitaires dates
@@ -34,9 +34,30 @@ const listFeed          = document.getElementById('listFeed');
   }
 
   bindEvents();
-  loadData().then(render).catch(err => {
+  loadData().then(() => {
+    render();
+    // Si l’URL contient ?id=..., ouvrir la modale correspondante
+    const deepId = getQueryParam('id');
+    if (deepId) {
+      const it = ALL_DATA.find(x => x.id === deepId);
+      if (it) openDetails(it, { push: false }); // déjà sur l’URL
+    }
+  }).catch(err => {
     console.error('Erreur loadData:', err);
     if (listFeed) listFeed.innerHTML = `<div class="text-center text-danger py-5">Erreur de chargement des données.</div>`;
+  });
+
+  // Gère bouton retour/avant du navigateur pour fermer/rouvrir la modale
+  window.addEventListener('popstate', () => {
+    const id = getQueryParam('id');
+    const modalEl = document.getElementById('detailsModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (id) {
+      const it = ALL_DATA.find(x => x.id === id);
+      if (it) openDetails(it, { push: false });
+    } else if (modal) {
+      modal.hide();
+    }
   });
 })();
 
@@ -175,12 +196,18 @@ function renderList(items) {
       </div>
     `;
 
-    row.querySelector('[data-action="details"]').addEventListener('click', () => openDetails(it));
+    row.querySelector('[data-action="details"]').addEventListener('click', () => openDetails(it, { push: true }));
     listFeed.appendChild(row);
   }
 }
 
 // ============ MODAL ============
+
+// URL canonique de la fiche sur TA plateforme (deep link)
+function opportunityUrl(it) {
+  const base = location.origin + location.pathname; // ex: https://sakayo16.github.io/
+  return `${base}?id=${encodeURIComponent(it.id)}`;
+}
 
 // helper: lie un bouton/anchor à une URL et ouvre en nouvel onglet (fallback copie)
 function bindShareLink(id, url) {
@@ -189,17 +216,15 @@ function bindShareLink(id, url) {
   el.setAttribute('href', url);
   el.onclick = (ev) => {
     try {
-      // on essaie d'ouvrir explicitement (plus fiable que de compter sur href seul)
       window.open(url, '_blank', 'noopener');
       ev.preventDefault();
     } catch (e) {
-      // fallback copie
       navigator.clipboard?.writeText(url);
     }
   };
 }
 
-function openDetails(it) {
+function openDetails(it, opts = { push: true }) {
   document.getElementById('modalTitle').textContent = it.title;
   document.getElementById('modalContent').innerHTML = `
     <div class="mb-2"><strong>Type :</strong> ${escapeHtml(it.type || '')}</div>
@@ -211,12 +236,12 @@ function openDetails(it) {
     ${Array.isArray(it.tags) && it.tags.length ? `<div class="mb-2"><strong>Tags :</strong> ${it.tags.map(escapeHtml).join(', ')}</div>` : ''}
   `;
 
-  // Lien Candidater
+  // Lien Candidater (externe)
   const link = document.getElementById('applyLink');
-  if (link) {
-    link.href = it.apply_url;
-    link.onclick = () => { /* laisse le comportement naturel */ };
-  }
+  if (link) link.href = it.apply_url;
+
+  // URL à partager = URL de TA plateforme (deep link)
+  const deepLink = opportunityUrl(it);
 
   // Partage natif (Web Share API)
   const shareBtn = document.getElementById('shareBtn');
@@ -225,30 +250,41 @@ function openDetails(it) {
       const shareData = {
         title: it.title,
         text: `Découvrez cette opportunité : ${it.title}${it.description_short ? '\n\n' + it.description_short : ''}`,
-        url: it.apply_url
+        url: deepLink
       };
       if (navigator.share) {
         navigator.share(shareData).catch(console.error);
       } else {
-        navigator.clipboard.writeText(it.apply_url).then(() => {
-          alert("Lien copié dans le presse-papiers !");
+        navigator.clipboard.writeText(deepLink).then(() => {
+          alert("Lien copié : " + deepLink);
         }).catch(console.error);
       }
     };
   }
 
-  // Liens sociaux (ouverture explicite + href)
-  const url   = it.apply_url || location.href;
-  const title = it.title || 'Opportunité';
-  const txt   = it.description_short || '';
-
-  bindShareLink('shareLinkedin', `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
-  bindShareLink('shareWhatsapp', `https://wa.me/?text=${encodeURIComponent(`Découvrez cette opportunité : ${title} ${url}`)}`);
-  bindShareLink('shareTwitter',  `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`);
-  bindShareLink('shareEmail',    `mailto:?subject=${encodeURIComponent("Opportunité : " + title)}&body=${encodeURIComponent((txt ? txt + "\n\n" : "") + "Candidater ici : " + url)}`);
+  // Liens sociaux -> ta plateforme
+  bindShareLink('shareLinkedin', `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(deepLink)}`);
+  bindShareLink('shareWhatsapp', `https://wa.me/?text=${encodeURIComponent(`Découvrez cette opportunité : ${it.title} ${deepLink}`)}`);
+  bindShareLink('shareTwitter',  `https://twitter.com/intent/tweet?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(it.title)}`);
+  bindShareLink('shareEmail',    `mailto:?subject=${encodeURIComponent("Opportunité : " + it.title)}&body=${encodeURIComponent((it.description_short ? it.description_short + "\n\n" : "") + deepLink)}`);
 
   // Afficher la modale
-  new bootstrap.Modal(document.getElementById('detailsModal')).show();
+  const modalEl = document.getElementById('detailsModal');
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+
+  // Met à jour l’URL (sans recharger) : ?id=...
+  if (opts.push) {
+    history.pushState({ id: it.id }, '', deepLink);
+  }
+
+  // Quand on ferme la modale : retirer ?id=... de l’URL
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    const hasId = getQueryParam('id');
+    if (hasId) {
+      history.pushState({}, '', location.origin + location.pathname);
+    }
+  }, { once: true });
 }
 
 // ============ OUTILS ============
@@ -264,6 +300,10 @@ function escapeHtml(s='') {
 }
 function pad(n){ return String(n).padStart(2,'0'); }
 function formatDate(d){ if(!d) return ''; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function getQueryParam(name){
+  const url = new URL(location.href);
+  return url.searchParams.get(name);
+}
 
 function csvToJson(csv) {
   const lines = csv.split(/\r?\n/).filter(Boolean);
