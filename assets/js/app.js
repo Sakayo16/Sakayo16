@@ -1,6 +1,5 @@
 // Utilitaires dates
 }
-}
 
 
 function openDetails(it) {
