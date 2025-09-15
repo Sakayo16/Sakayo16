@@ -1,5 +1,5 @@
 // ===============================
-// app.js — Liste "magazine" simple + partage
+// app.js — Liste "magazine" simple + partage robuste
 // ===============================
 
 // Utilitaires dates
@@ -70,7 +70,7 @@ async function loadData() {
 
   // Normalisation minimale
   ALL_DATA = (ALL_DATA || [])
-    .filter(row => row.title && row.apply_url && (row.deadline || row.deadline === "")) // certaines offres n'ont pas de deadline
+    .filter(row => row.title && row.apply_url && (row.deadline || row.deadline === "")) // certaines offres sans deadline
     .map(row => ({
       ...row,
       id: row.id || slugify(`${row.title}-${row.deadline || 'no-deadline'}`),
@@ -181,6 +181,24 @@ function renderList(items) {
 }
 
 // ============ MODAL ============
+
+// helper: lie un bouton/anchor à une URL et ouvre en nouvel onglet (fallback copie)
+function bindShareLink(id, url) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.setAttribute('href', url);
+  el.onclick = (ev) => {
+    try {
+      // on essaie d'ouvrir explicitement (plus fiable que de compter sur href seul)
+      window.open(url, '_blank', 'noopener');
+      ev.preventDefault();
+    } catch (e) {
+      // fallback copie
+      navigator.clipboard?.writeText(url);
+    }
+  };
+}
+
 function openDetails(it) {
   document.getElementById('modalTitle').textContent = it.title;
   document.getElementById('modalContent').innerHTML = `
@@ -195,7 +213,10 @@ function openDetails(it) {
 
   // Lien Candidater
   const link = document.getElementById('applyLink');
-  if (link) link.href = it.apply_url;
+  if (link) {
+    link.href = it.apply_url;
+    link.onclick = () => { /* laisse le comportement naturel */ };
+  }
 
   // Partage natif (Web Share API)
   const shareBtn = document.getElementById('shareBtn');
@@ -216,20 +237,15 @@ function openDetails(it) {
     };
   }
 
-  // Liens sociaux
-  const ln = document.getElementById('shareLinkedin');
-  const wa = document.getElementById('shareWhatsapp');
-  const tw = document.getElementById('shareTwitter');
-  const em = document.getElementById('shareEmail');
-
-  const url = it.apply_url || location.href;
+  // Liens sociaux (ouverture explicite + href)
+  const url   = it.apply_url || location.href;
   const title = it.title || 'Opportunité';
-  const txt = it.description_short || '';
+  const txt   = it.description_short || '';
 
-  if (ln) ln.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-  if (wa) wa.href = `https://wa.me/?text=${encodeURIComponent(`Découvrez cette opportunité : ${title} ${url}`)}`;
-  if (tw) tw.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-  if (em) em.href = `mailto:?subject=${encodeURIComponent("Opportunité : " + title)}&body=${encodeURIComponent((txt ? txt + "\n\n" : "") + "Candidater ici : " + url)}`;
+  bindShareLink('shareLinkedin', `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
+  bindShareLink('shareWhatsapp', `https://wa.me/?text=${encodeURIComponent(`Découvrez cette opportunité : ${title} ${url}`)}`);
+  bindShareLink('shareTwitter',  `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`);
+  bindShareLink('shareEmail',    `mailto:?subject=${encodeURIComponent("Opportunité : " + title)}&body=${encodeURIComponent((txt ? txt + "\n\n" : "") + "Candidater ici : " + url)}`);
 
   // Afficher la modale
   new bootstrap.Modal(document.getElementById('detailsModal')).show();
