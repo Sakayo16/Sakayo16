@@ -1,0 +1,78 @@
+<!doctype html>
+</div>
+</section>
+
+
+<!-- Pagination -->
+<section class="py-4">
+<div class="container d-flex justify-content-center">
+<nav aria-label="Pagination">
+<ul class="pagination" id="pagination"></ul>
+</nav>
+</div>
+</section>
+
+
+<!-- Footer -->
+<footer class="py-5 border-top">
+<div class="container">
+<div class="row g-3 align-items-center">
+<div class="col-lg-8">
+<p class="mb-1">© <span id="year"></span> Opportunités – Emplois & Bourses. Propulsé par GitHub Pages.</p>
+<a class="text-decoration-none" href="a-propos.html">À propos</a>
+</div>
+<div class="col-lg-4">
+<div class="ad ad-footer border rounded bg-white p-3 text-center small text-muted">Espace publicité (footer)</div>
+</div>
+</div>
+</div>
+</footer>
+
+
+<!-- Modal détails -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="modalTitle">Détails</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+<div class="modal-body">
+<div id="modalContent"></div>
+</div>
+<div class="modal-footer">
+<a id="applyLink" class="btn btn-primary" target="_blank" rel="noopener">Candidater</a>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Cookie consent simple (RGPD light) -->
+<div id="cookieBanner" class="cookie-banner d-none">
+<div class="container d-flex flex-column flex-lg-row align-items-center gap-2 py-2">
+<div class="small">Ce site utilise des cookies aux fins d'analyse et de publicité.</div>
+<div class="ms-lg-auto d-flex gap-2">
+<button id="cookieAccept" class="btn btn-sm btn-primary">Accepter</button>
+<button id="cookieReject" class="btn btn-sm btn-outline-secondary">Refuser</button>
+</div>
+</div>
+</div>
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<!-- App -->
+<script>window.APP_CONFIG = {
+googleFormUrl: "#", // Remplace par l'URL du Google Form pour le bouton "Ajouter"
+sheetJsonUrl: null, // Option B (Apps Script renvoyant JSON propre)
+sheetCsvUrl: null, // Option A (CSV publié de Google Sheets)
+deadlineProcheDays: 14,
+newThresholdDays: 7,
+pageSize: 12
+};</script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
