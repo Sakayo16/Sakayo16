@@ -35,7 +35,13 @@
     <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div>
         <h1 class="h3 mb-1">Bourses & Emplois</h1>
-        <p class="mb-0 opacity-75">Liste simple, élégante et rapide à parcourir.</p>
+        <p class="mb-0">
+          Découvrez chaque jour les meilleures opportunités pour booster votre avenir : <br>
+          <strong>• Bourses d’études</strong> pour financer vos cursus en Afrique, Europe ou ailleurs.<br>
+          <strong>• Emplois et stages</strong> sélectionnés pour étudiants, jeunes diplômés et professionnels.<br>
+          <strong>• Appels à projets & formations</strong> pour développer vos compétences et vos réseaux.<br>
+          Classement par date limite, recherche rapide et ajout simple via formulaire en ligne.
+        </p>
       </div>
       <div class="d-lg-none w-100">
         <div class="input-group input-group-lg mt-2">
@@ -68,11 +74,11 @@
             </div>
           </div>
 
-          <!-- CONTENEUR D’AFFICHAGE (doit rester ici) -->
+          <!-- CONTENEUR D’AFFICHAGE -->
           <div id="listFeed" class="vstack gap-3"></div>
         </div>
 
-        <!-- (Optionnel) Sidebar col-lg-3 ici -->
+        <!-- (Optionnel) Sidebar col-lg-3 -->
       </div>
     </div>
   </main>
@@ -86,23 +92,40 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
         </div>
         <div class="modal-body"><div id="modalContent"></div></div>
-        <div class="modal-footer border-0">
+        <div class="modal-footer border-0 d-flex flex-wrap gap-2">
           <a id="applyLink" class="btn btn-primary rounded-pill" target="_blank" rel="noopener">
             <i class="bi bi-box-arrow-up-right me-1"></i> Candidater
+          </a>
+          <!-- Bouton partager natif -->
+          <button id="shareBtn" class="btn btn-outline-secondary rounded-pill">
+            <i class="bi bi-share me-1"></i> Partager
+          </button>
+          <!-- Icônes de partage -->
+          <a id="shareLinkedin" class="btn btn-outline-primary rounded-pill" target="_blank" rel="noopener">
+            <i class="bi bi-linkedin"></i>
+          </a>
+          <a id="shareWhatsapp" class="btn btn-outline-success rounded-pill" target="_blank" rel="noopener">
+            <i class="bi bi-whatsapp"></i>
+          </a>
+          <a id="shareTwitter" class="btn btn-outline-info rounded-pill" target="_blank" rel="noopener">
+            <i class="bi bi-twitter-x"></i>
+          </a>
+          <a id="shareEmail" class="btn btn-outline-dark rounded-pill" target="_blank" rel="noopener">
+            <i class="bi bi-envelope"></i>
           </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- JS Bootstrap (toujours avant ton app.js) -->
+  <!-- JS Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Configuration de l’app -->
+  <!-- Configuration -->
   <script>
     window.APP_CONFIG = {
       googleFormUrl: "#",
-      sheetJsonUrl: "data/sample.json",   // ← lit le fichier local
+      sheetJsonUrl: "data/sample.json",
       sheetCsvUrl: null,
       deadlineProcheDays: 14,
       newThresholdDays: 7,
