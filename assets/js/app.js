@@ -1,5 +1,6 @@
 // ===============================
 // app.js — Liste "magazine" + partage vers plateforme (deep link ?id=...)
+// + Insertion AdSense automatique toutes les 5 cartes dans #listFeed
 // ===============================
 
 // Utilitaires dates
@@ -10,6 +11,9 @@ function daysBetween(a, b) { return Math.ceil((a - b) / (1000*60*60*24)); }
 // État global
 let ALL_DATA = [];
 const cfg = window.APP_CONFIG || {};
+
+// ✅ AdSense slot (à définir dans window.APP_CONFIG.adsenseSlotId)
+const ADS_SLOT = cfg.adsenseSlotId || null;
 
 // Sélecteurs DOM
 const searchInput       = document.getElementById('searchInput');
@@ -150,7 +154,7 @@ function renderList(items) {
   const deadlineProcheDays = cfg.deadlineProcheDays ?? 14;
   const newThresholdDays   = cfg.newThresholdDays ?? 7;
 
-  for (const it of items) {
+  items.forEach((it, idx) => {
     // Badges
     const badges = [];
     if (it.deadlineDate && it.deadlineDate < today) {
@@ -198,7 +202,16 @@ function renderList(items) {
 
     row.querySelector('[data-action="details"]').addEventListener('click', () => openDetails(it, { push: true }));
     listFeed.appendChild(row);
-  }
+
+    // ✅ Insertion AdSense après chaque 5 cartes (5, 10, 15, ...)
+    if (ADS_SLOT && ((idx + 1) % 5 === 0)) {
+      const ad = createAdNode();
+      if (ad) {
+        listFeed.appendChild(ad);
+        tryFillAd(ad);
+      }
+    }
+  });
 }
 
 // ============ MODAL ============
@@ -287,6 +300,32 @@ function openDetails(it, opts = { push: true }) {
   }, { once: true });
 }
 
+// ============ AdSense helpers ============
+function createAdNode() {
+  if (!ADS_SLOT) return null;
+  const wrap = document.createElement('div');
+  wrap.className = 'my-3 ads-block';
+  wrap.innerHTML = `
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2624639972261961"
+         data-ad-slot="${ADS_SLOT}"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  `;
+  return wrap;
+}
+
+// À appeler APRES insertion du <ins> dans le DOM
+function tryFillAd(containerEl) {
+  if (!containerEl || !window.adsbygoogle) return;
+  try {
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  } catch (e) {
+    // silencieux: évite de casser le rendu si AdSense n'est pas prêt
+  }
+}
+
 // ============ OUTILS ============
 function debounce(fn, wait = 300) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
@@ -296,7 +335,7 @@ function slugify(s='') {
     .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 }
 function escapeHtml(s='') {
-  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[m]));
 }
 function pad(n){ return String(n).padStart(2,'0'); }
 function formatDate(d){ if(!d) return ''; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
